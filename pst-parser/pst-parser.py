@@ -18,6 +18,7 @@ from pstrecordentry import PSTRecordEntry
 # consts
 MODE_FOLDER = "folder"
 MODE_MESSAGE = "message"
+
 OUTLOOK_DATA_FOLDER = 1
 
 def open_data_folder(pst_file):
@@ -32,7 +33,7 @@ def open_data_folder(pst_file):
     
     
 def print_folder_summary(path, folder):
-    formatted_path = "root" if path is None else " ".join(map(str, path))  
+    formatted_path = "root" if path is None else "/".join(map(str, path))  
     
     print "Path: %s" % formatted_path
     print "ID: %s" % folder.get_identifier()
@@ -156,6 +157,11 @@ def main(args):
         
     args.pstfile.close()
 
+def parse_path(path):
+    if path is not None:
+        return [segment for segment in path.split("/") if segment != ""]
+        
+    return None
 
 if __name__ == "__main__":
     parser = ArgumentParser("PST parser", formatter_class=ArgumentDefaultsHelpFormatter, version=__version__, description=__description__)
@@ -165,7 +171,7 @@ if __name__ == "__main__":
     
     # options
     parser.add_argument("-m", "--mode", help="switches mode to folder or message", default="folder")
-    parser.add_argument("-p", "--path", nargs="+", help="context path using indexes", metavar="PATH", type=int, default=None)
+    parser.add_argument("-p", "--path", help="context path separate with /", type=parse_path, default=None)
     #parser.add_argument("-r", "--recurse", action="store_true", help="recurse sub folders")
     #parser.add_argument("-f", "--format", type=str, help="format to display output in")
     #parser.add_argument("-o", "--output", help="file to write output to", type=FileType("w"), default=sys.stdout)
