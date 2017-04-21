@@ -31,6 +31,7 @@ Provides message information for messages in the path chosen (plus sub folders i
 * --body - contains search text in the message body (takes multiple args)
 * --recipient - contains search text for recipient (takes multiple args)
 * --sender - contains search text for sender (takes multiple args)
+* --subject - contains search text for subject (takes multiple args)
 * --fields - extra fields to return (takes multiple args)
 
 *WARNING: specifying recurse with a tree with lots of folders and messaeges could take a long time to process*

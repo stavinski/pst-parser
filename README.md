@@ -1,2 +1,3 @@
 # pst-parser
-tool for parsing PST files
+
+A python tool for parsing PST (outlook) files
