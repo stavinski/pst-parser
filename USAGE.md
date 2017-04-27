@@ -2,14 +2,21 @@
 
 ## COMMON PARAMS
 
-* -m, --mode - switches into either folder or message mode (default is folder)
+### Required
+
+* pstfile - the PST file to parse
+* entity - the type of entity to perform actions against (either folder or message)
+
+### Optional
+
 * -p, --path - context path to use uses path seperators i.e. 1/5 (default is root)
 * -r, --recurse - flag to recurse down the folder struture
 * -f, --format - specify format for results to allow easier parsing, choices are screen or csv (default screen)
 * -o, --output - file for outout (default stdout)
 * --message-fields - lists message fields available to be used for message fields returned
+* -v, --verbose - turn on verbose logging (stdout only)
 
-## Folder (default)
+## Folder Entity
 
 Provides folder information about the path chosen (plus sub folders if recurse specified).
 
@@ -22,7 +29,7 @@ Provides folder information about the path chosen (plus sub folders if recurse s
 * no. of sub messages
 * sub folders
 
-## Message 
+## Message Entity
 
 Provides message information for messages in the path chosen (plus sub folders if recurse specified) using optional filters provided.
 
@@ -52,8 +59,8 @@ plus additional fields specified with --fields param
 
 ## EXAMPLES
 
-    ./pst-parser --path 1 --recurse
-    ./pst-parser -p 1 -f csv -o inbox_structure.log
-    ./pst-parser -m message --index 200 202 215 --fields "MESSAGE_PRIORITY" "MESSAGE_FLAGS"
-    ./pst-parser -m message --path 1/3 --sender "foo@bar.com" --recipient "joe@somewhere.com"
+    ./pst-parser folder --path 1 --recurse
+    ./pst-parser -p 1 -f csv -o inbox_structure.csv
+    ./pst-parser message --index 200 202 215 --fields "MESSAGE_PRIORITY" "MESSAGE_FLAGS"
+    ./pst-parser message --path 1/3 --sender "foo@bar.com" --recipient "joe@somewhere.com"
     
