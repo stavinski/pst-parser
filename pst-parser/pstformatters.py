@@ -2,7 +2,7 @@
 def create_formatter(type="screen", *args, **kwargs):
     formatters = {
         "screen": ScreenFormatter,
-        "csv": CsvFormatter
+        "csv": DelimiterFormatter
     }
     
     if not formatters.has_key(type):
@@ -11,14 +11,12 @@ def create_formatter(type="screen", *args, **kwargs):
     return formatters[type](*args, **kwargs)
 
 
-class Formatter:
-    def format_folder(self, path=None, folder=None):
-        pass
+class ScreenFormatter:
     
-    def format_message(self, idx, message):
-        pass
-
-class ScreenFormatter(Formatter):
+    def __init__(self, args=None):
+        assert args is not None, "args must be provided"
+        self._args = args
+    
     
     def format_folder(self, path, folder):
         formatted_path = "root" if path is None else "/".join(map(str, path))  
@@ -41,9 +39,22 @@ class ScreenFormatter(Formatter):
     
     def format_message(self, index, message):
         print "%d:" % index,
-        print "[%s]" % message.get_subject()
-    
+        print "-" * 80
+        print "%s" % message.get_subject()
+        print "Sender: %s" % message.get_sender_name()
+        print "No. of attachments: %d" % message.get_number_of_attachments()
+        
+        if self._args.include_plaintext:
+            print "Plaintext:"
+            print message.get_plain_text_body()
+            
+        if self._args.include_html:
+            print "HTML:"
+            print message.get_html_body()
         
  
-class CsvFormatter(Formatter):
-    pass
+class DelimiterFormatter:
+    
+    def __init__(self, args=None, delimiter=","):
+        self._args = args
+    

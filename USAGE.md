@@ -5,20 +5,21 @@
 ### Required
 
 * pstfile - the PST file to parse
-* entity - the type of entity to perform actions against (either folder or message)
+* command - commands to perform against PST (either folder or message)
 
 ### Optional
 
-* -p, --path - context path to use uses path seperators i.e. 1/5 (default is root)
-* -r, --recurse - flag to recurse down the folder struture
 * -f, --format - specify format for results to allow easier parsing, choices are screen or csv (default screen)
 * -o, --output - file for outout (default stdout)
-* --message-fields - lists message fields available to be used for message fields returned
 * -v, --verbose - turn on verbose logging (stdout only)
 
-## Folder Entity
+## Folder Command
 
-Provides folder information about the path chosen (plus sub folders if recurse specified).
+Folder operations against PST allow travsersing the folder structure to gain top level information.
+
+### PARAMS
+
+* -p, --path - context path to use uses path seperators i.e. 1/5 (default is root)
 
 ### RETURNS
 
@@ -29,38 +30,34 @@ Provides folder information about the path chosen (plus sub folders if recurse s
 * no. of sub messages
 * sub folders
 
-## Message Entity
+## Message Command
 
-Provides message information for messages in the path chosen (plus sub folders if recurse specified) using optional filters provided.
+Message operations against PST allow retrieving individual messages with optional filtering and choosing information to be returned about the message.
 
 ### PARAMS
 
-* --index - index of message (takes multiple args)
-* --body - contains search text in the message body (takes multiple args)
-* --recipient - contains search text for recipient (takes multiple args)
-* --sender - contains search text for sender (takes multiple args)
-* --subject - contains search text for subject (takes multiple args)
-* --fields - extra fields to return (takes multiple args)
-
-*WARNING: specifying recurse with a tree with lots of folders and messaeges could take a long time to process*
+* -p, --path - context path to use uses path seperators i.e. 1/5 (default is root)
+* -mf, --message-fields - lists message fields available to be used for message fields returned
+* -s, --search - search text to filter messages in folder
+* -l, --look - where to look for search text provided {html, plaintext, subject, sender} (takes multiple)
+* -i, --include - extra fields to return (takes multiple args)
+* -bP, --bPlaintext - include plaintext in output
+* -bH, --bHTML - include html in output
 
 ### RETURNS
 
 * path
 * index
 * sender
-* recipient
 * subject
 * no. of attachments
-* plaintext body
-* html body
 
-plus additional fields specified with --fields param
+Body types specified via -b*, --b* params and additional fields specified with --i, --include param
 
 ## EXAMPLES
 
-    ./pst-parser folder --path 1 --recurse
-    ./pst-parser -p 1 -f csv -o inbox_structure.csv
-    ./pst-parser message --index 200 202 215 --fields "MESSAGE_PRIORITY" "MESSAGE_FLAGS"
-    ./pst-parser message --path 1/3 --sender "foo@bar.com" --recipient "joe@somewhere.com"
+    ./pst-parser.py input.pst folder --path 1
+    ./pst-parser.py input.pst -f csv -o inbox_structure.csv -p 1/2
+    ./pst-parser.py input.pst message -s "username" "password" -l html plaintext subject --fields "MESSAGE_PRIORITY" "MESSAGE_FLAGS"
+    ./pst-parser.py input.pst message --path 1/3 --s "foo@bar.com" --include sender
     
