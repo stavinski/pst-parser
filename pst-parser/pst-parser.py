@@ -20,35 +20,20 @@ import constants
 
 from pstformatters import create_formatter
 from argparse import ArgumentParser, FileType, RawTextHelpFormatter
-from pstrecordentry import PSTRecordEntry
+from psthelpers import PSTFolder, PSTRecordEntry, parse_path_expr
+
 
 def open_data_folder(pst_file):
     try:
         pff_file = pypff.file()
         pff_file.open_file_object(pst_file)
         root_folder = pff_file.get_root_folder()
-        return root_folder.get_sub_folder(constants.OUTLOOK_DATA_FOLDER_IDX)
+        return PSTFolder(root_folder.get_sub_folder(constants.OUTLOOK_DATA_FOLDER_IDX))
     except Exception as e:
         sys.exit("[!] could not open data folder")
         traceback.print_exc()
      
-    
-def get_folder(root, path_segments):
-    if path_segments is None: # use root data folder
-        return root
-    
-    # walk down the path segments
-    folder = root
-    
-    try:
-        for i in path_segments:
-            folder = folder.get_sub_folder(int(i))
-        
-        return folder
-    except IOError:
-        sys.exit("[!] unable to access folder please check path is correct")
-    
-    
+
 def handle_message_fields():
     # user just wants list of message fields
     if args.message_fields:
@@ -59,7 +44,7 @@ def handle_message_fields():
         
 
 def handle_folder_entity(data_folder, args, formatter):
-    folder = get_folder(data_folder, args.path)
+    folder = data_folder.get_folder_from_path(args.path)
     formatter.format_folder(args.path, folder)
     
 
@@ -68,25 +53,35 @@ def handle_message_entity(data_folder, args, formatter):
     if args.message_fields:
         handle_message_fields()
         sys.exit(0)
-            
-    folder = get_folder(data_folder, args.path)
-    number_of_msgs = folder.get_number_of_sub_messages()
-    msgs = { i: folder.get_sub_message(i) for i in range(0, number_of_msgs) }
-            
+        
+    folder = data_folder.get_folder_from_path(args.path)
+    number_of_msgs = folder.number_of_messages
+    
+    # display folder info
     formatted_path = "root" if args.path is None else "/".join(map(str, args.path))  
-    print "Path: %s" % formatted_path
-    print "Folder: %s" % folder.get_name()
-    
-    
-    for (idx, msg) in msgs.iteritems():
+    print "[+] Path: %s" % formatted_path
+    print "[+] Folder: %s" % folder.name
+       
+    msgs = folder.get_messages_iter()
+    msg_count = 0
+    for (idx, msg) in msgs:
+        
+        # check if the sender matches if supplied
+        if args.sender is not None and not msg.has_senders(*args.sender):
+            continue
+        
+        # check that search matches if supplied
+        if args.search is not None and not msg.contains_text(*args.search):
+            continue
                 
-        #if args.body is not None:
-            #for search in args.body:
-                #body = msg.get_plain_text_body()
-                #if search in body:
-                    #msgs[i] = msg
-                            
         formatter.format_message(idx, msg)
+        msg_count += 1
+        
+    if msg_count > 0:
+        print "[+] Found %d messages" % msg_count
+    else:
+        print "[-] Found no messages"
+    
         
         
 def main(args):
@@ -101,15 +96,6 @@ def main(args):
         pst_file.close()
         output.close()
         
-
-# parses the path expresssion passed, expects path to be separated via forward slashes like
-# directory traversing i.e. 1/4/10
-def parse_path_expr(path):
-    if path is not None:
-        return [segment for segment in path.split("/") if segment != ""]
-        
-    return None
-
 
 if __name__ == "__main__":
     root_parser = ArgumentParser(formatter_class=RawTextHelpFormatter, version=__version__, description=__description__)
@@ -131,8 +117,8 @@ if __name__ == "__main__":
     message_parser = sub_parsers.add_parser("message", help="message operations in PST")
     message_parser.add_argument("-p", "--path", help=r"context path traverse like directory using /", type=parse_path_expr, default=None)
     message_parser.add_argument("-mf", "--message-fields", help="klist message fields available", action="store_true")
-    message_parser.add_argument("-s", "--search", help="search text to use", nargs="+", type=str, default=[])
-    message_parser.add_argument("-l", "--look", help="where to look for search text provided", nargs="+", choices=["html", "plaintext", "subject", "sender"], default=[])
+    message_parser.add_argument("-s", "--search", help="search text to use", nargs="+", type=str)
+    message_parser.add_argument("-S", "--sender", help="sender(s) to restrict to", nargs="+", type=str)
     message_parser.add_argument("-i", "--include", help="extra fields to return (list available retrieved via -mf, --message-fields)", default=[])
     message_parser.add_argument("-bP", "--bPlaintext", help="include plaintext content in output", action="store_true", dest="include_plaintext")
     message_parser.add_argument("-bH", "--bHTML", help="include html content in output", action="store_true", dest="include_html")

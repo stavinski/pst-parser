@@ -22,35 +22,35 @@ class ScreenFormatter:
         formatted_path = "root" if path is None else "/".join(map(str, path))  
     
         print "Path: %s" % formatted_path
-        print "ID: %s" % folder.get_identifier()
-        print "Name: %s" % folder.get_name()
-        print "No. of sub folders: %d" % folder.get_number_of_sub_folders()
-        print "No. of messages: %d" % folder.get_number_of_sub_messages()
+        print "ID: %s" % folder.identifier
+        print "Name: %s" % folder.name
+        print "No. of sub folders: %d" % folder.number_of_sub_folders
+        print "No. of messages: %d" % folder.number_of_messages
         
-        if folder.get_number_of_sub_folders() > 0:
+        if folder.has_sub_folders:
             print "Sub folders:"
-            
-            for i in range(0, folder.get_number_of_sub_folders()):
+           
+            for (idx, sub_folder) in folder.get_folders_iter():
                 if path is None:
-                    print "%d: %s" % (i, folder.get_sub_folder(i).get_name())
+                    print "%d: %s" % (idx, sub_folder.name)
                 else:
-                    print "%s/%d: %s" % (formatted_path, i, folder.get_sub_folder(i).get_name())
+                    print "%s/%d: %s" % (formatted_path, idx, sub_folder.name)
  
     
     def format_message(self, index, message):
         print "%d:" % index,
         print "-" * 80
-        print "%s" % message.get_subject()
-        print "Sender: %s" % message.get_sender_name()
-        print "No. of attachments: %d" % message.get_number_of_attachments()
+        print "%s" % message.subject
+        print "Sender: %s" % message.sender
+        print "No. of attachments: %d" % message.number_of_attachments
         
         if self._args.include_plaintext:
             print "Plaintext:"
-            print message.get_plain_text_body()
+            print message.plain_text
             
         if self._args.include_html:
             print "HTML:"
-            print message.get_html_body()
+            print message.html
         
  
 class DelimiterFormatter:
