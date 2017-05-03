@@ -30,8 +30,8 @@ def open_data_folder(pst_file):
         root_folder = pff_file.get_root_folder()
         return PSTFolder(root_folder.get_sub_folder(constants.OUTLOOK_DATA_FOLDER_IDX))
     except Exception as e:
-        sys.exit("[!] could not open data folder")
         traceback.print_exc()
+        sys.exit("[!] could not open data folder")
      
 
 def handle_message_fields():
@@ -40,6 +40,7 @@ def handle_message_fields():
         print "[*] message fields available:"
         for field in constants.NAME_TO_ENTRY_TYPE.iterkeys():
             print field
+        
         sys.exit(0)
         
 
@@ -58,7 +59,7 @@ def handle_message_entity(data_folder, args, formatter):
     number_of_msgs = folder.number_of_messages
     
     # display folder info
-    formatted_path = "root" if args.path is None else "/".join(map(str, args.path))  
+    formatted_path = "root" if not args.path else "/".join(map(str, args.path))  
     print "[+] Path: %s" % formatted_path
     print "[+] Folder: %s" % folder.name
        
@@ -67,11 +68,11 @@ def handle_message_entity(data_folder, args, formatter):
     for (idx, msg) in msgs:
         
         # check if the sender matches if supplied
-        if args.sender is not None and not msg.has_senders(*args.sender):
+        if args.sender and not msg.has_senders(*args.sender):
             continue
         
         # check that search matches if supplied
-        if args.search is not None and not msg.contains_text(*args.search):
+        if args.search and not msg.contains_text(*args.search):
             continue
                 
         formatter.format_message(idx, msg)

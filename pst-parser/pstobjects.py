@@ -18,38 +18,21 @@ def parse_path_expr(expr):
 Represents a PST folder to make it easier to work with
 """
 
-class PSTFolder:
+class PSTFolder(object):
        
     def __init__(self, folder):
+        super(PSTFolder, self).__init__()
         self.folder = folder
-        
-        
-    @property
-    def identifier(self):
-        return self.folder.get_identifier()
+                
+        # map the pypff folder object getters
+        self.identifier = self.folder.get_identifier()
+        self.name = self.folder.get_name()
+        self.number_of_messages = self.folder.get_number_of_sub_messages()
+        self.number_of_sub_folders = self.folder.get_number_of_sub_folders()
+        self.has_sub_folders = self.number_of_sub_folders > 0
     
-    @property
-    def name(self):
-        return self.folder.get_name()
-    
-    
-    @property
-    def number_of_sub_folders(self):
-        return self.folder.get_number_of_sub_folders()
-    
-    
-    @property
-    def has_sub_folders(self):
-        return self.number_of_sub_folders > 0
-            
-    @property
-    def number_of_messages(self):
-        return self.folder.get_number_of_sub_messages()
-    
-    @property
-    def name(self):
-        return self.folder.get_name()
-           
+    def __repr__(self):
+        return "PSTFolder [%s] => [%s]" % (self.identifier, self.name)
     
     def get_folder_from_path(self, path_segments):
         if path_segments is None:
@@ -66,12 +49,10 @@ class PSTFolder:
         except IOError:
             raise PSTFolderAccessError("[!] unable to access folder please check path is correct")
     
-    
     def get_folders_iter(self):
         for i in range(0, self.number_of_sub_folders):
             yield (i, PSTFolder(self.folder.get_sub_folder(i)))
             
-    
     def get_messages_iter(self):
         for i in range(0, self.number_of_messages):
             yield (i, PSTMessage(self.folder.get_sub_message(i)))
@@ -82,42 +63,23 @@ class PSTMessage:
     def __init__(self, message):
         self.message = message
         
+        # map pypff message getters
+        self.sender = self.message.get_sender_name()
+        self.html = self.message.get_html_body()
+        self.plain_text = self.message.get_plain_text_body()
+        self.number_of_attachments = self.message.get_number_of_attachments()
+        self.subject = self.message.get_subject()
         
-    @classmethod
-    def _get_val_or_empty(cls, val):
-        if val is None:
-            return ""
-        else:
-            return val
-
-    @property
-    def number_of_attachments(self):
-        return self.message.get_number_of_attachments()
-
-    
-    @property
-    def sender(self):
-        return self.message.get_sender_name()
-    
-    
-    @property
-    def subject(self):
-        return self.message.get_subject()
-        
-    
-    @property
-    def plain_text(self):
-        return self.message.get_plain_text_body()
-        
-
-    @property
-    def html(self):
-        return self.message.get_html_body()
-    
-    
+    def __repr__(self):
+        return "PSTMessage [%s]" % self.subject
+            
+    @staticmethod
+    def _get_val_or_empty_str(val):
+        return "" if not val else val
+            
     def has_senders(self, *senders):
         sender = self.sender
-        if sender is None:
+        if not sender:
             return True
         
         for search_sender in map(str.lower, senders):
@@ -125,12 +87,11 @@ class PSTMessage:
                 return True
         
         return False
-    
-    
+        
     def contains_text(self, *contents):
-        subject = PSTMessage._get_val_or_empty(self.subject).lower()
-        plain_text = PSTMessage._get_val_or_empty(self.plain_text).lower()
-        html = PSTMessage._get_val_or_empty(self.html).lower()
+        subject = PSTMessage._get_val_or_empty_str(self.subject).lower()
+        plain_text = PSTMessage._get_val_or_empty_str(self.plain_text).lower()
+        html = PSTMessage._get_val_or_empty_str(self.html).lower()
         
         return any(content in subject
                    or content in plain_text
@@ -181,29 +142,25 @@ class PSTRecordEntry:
         #LIBPFF_VALUE_TYPE_MULTI_VALUE_BINARY_DATA				: 0x1102                
     }
 
-
     def __init__(self, record_entry):
         self.record_entry = record_entry
 
-
     def get_type(self):
         entry_type = self.record_entry.get_entry_type()
-        if entry_type is None:
+        if not entry_type:
             return None
 
-
-        if constants.ENTRY_TYPE_TO_NAME.has_key(entry_type):
+        if entry_type in constants.ENTRY_TYPE_TO_NAME:
             return constants.ENTRY_TYPE_TO_NAME[entry_type]
 
         return hex(entry_type)
 
-
     def get_value(self):
         val_type = self.record_entry.get_value_type()
-        if val_type is None:
+        if not val_type:
             return None
 
-        if PSTRecordEntry.value_type_funcs.has_key(val_type):
+        if val_type in PSTRecordEntry.value_type_funcs:
             func = PSTRecordEntry.value_type_funcs[val_type]
             return func(self.record_entry)
 
