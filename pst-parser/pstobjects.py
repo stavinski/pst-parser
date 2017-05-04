@@ -3,25 +3,24 @@ import pypff
 
 import constants
 
-"""
-parses the path expresssion passed, expects path to be separated via forward slashes like
-directory traversing i.e. 1/4/10
-"""
+
 def parse_path_expr(expr):
+    """
+    parses the path expresssion passed, expects path to be separated via forward slashes like
+    directory traversing i.e. '1/4/10'
+    """
+    
     if expr is not None:
         return [segment for segment in expr.split("/") if segment != ""]
         
     return None
 
 
-"""
-Represents a PST folder to make it easier to work with
-"""
-
 class PSTFolder(object):
-       
-    def __init__(self, folder):
-        super(PSTFolder, self).__init__()
+    """Represents a PST folder to make it easier to work with"""    
+    
+    def __init__(self, index, folder):
+        self.index = index
         self.folder = folder
                 
         # map the pypff folder object getters
@@ -36,7 +35,7 @@ class PSTFolder(object):
     
     def get_folder_from_path(self, path_segments):
         if path_segments is None:
-            return PSTFolder(self.folder)
+            return PSTFolder(0, self.folder)
         
         # walk down the path segments
         folder = self.folder
@@ -45,23 +44,28 @@ class PSTFolder(object):
             for i in path_segments:
                 folder = folder.get_sub_folder(int(i))
             
-            return PSTFolder(folder)
+            idx = path_segments[:-1]
+            return PSTFolder(idx, folder)
         except IOError:
             raise PSTFolderAccessError("[!] unable to access folder please check path is correct")
     
     def get_folders_iter(self):
-        for i in range(0, self.number_of_sub_folders):
-            yield (i, PSTFolder(self.folder.get_sub_folder(i)))
+        for i in xrange(0, self.number_of_sub_folders):
+            yield PSTFolder(i, self.folder.get_sub_folder(i))
             
-    def get_messages_iter(self):
-        for i in range(0, self.number_of_messages):
-            yield (i, PSTMessage(self.folder.get_sub_message(i)))
+    def get_messages_iter(self, max_messages=1000):
+        max_messages_returned = min(self.number_of_messages, max_messages)
+        for i in xrange(0, max_messages_returned):
+            yield PSTMessage(i, self.folder.get_sub_message(i), self.folder)
     
 
 class PSTMessage:
+    """Represents a pypff message"""
     
-    def __init__(self, message):
+    def __init__(self, index, message, folder):
+        self.index = index
         self.message = message
+        self.folder = folder
         
         # map pypff message getters
         self.sender = self.message.get_sender_name()
@@ -98,12 +102,10 @@ class PSTMessage:
                    or content in html 
                    for content in map(str.lower, contents))
 
-"""
-Respresents a Record Entry from a PST
-"""
 
 class PSTRecordEntry:
-
+    """Respresents a Record Entry from a PST"""
+    
     # mappings to functions to retrieve the value of the entry
     value_type_funcs = {
         0x0000: lambda _: None, #LIBPFF_VALUE_TYPE_UNSPECIFIED
