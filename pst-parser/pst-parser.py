@@ -18,7 +18,7 @@ import pypff
 import csv
 import constants
 
-from pstformatters import from_name
+from pstformatters import from_name, available_formatters
 from argparse import ArgumentParser, FileType, RawTextHelpFormatter
 from pstobjects import PSTFolder, PSTRecordEntry, parse_path_expr
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     
     # global args   
     root_parser.add_argument("pstfile", help="PST file to be parsed", type=FileType("r"), metavar="PST_FILE")
-    root_parser.add_argument("-f", "--format", type=str, help="format to display output in", choices=["screen", "csv"], default="screen")
+    root_parser.add_argument("-f", "--format", type=str, help="format to display output in", choices=available_formatters(), default="screen")
     root_parser.add_argument("-o", "--output", help="file to write output to", type=FileType("w"), default=sys.stdout)
     root_parser.add_argument("-V", "--verbose", help=r"turn on extra logging to the screen", action="store_true")
         
